@@ -22,17 +22,21 @@ Netopia's v2 API documentation was unavailable when the integration was built, s
 
 Commission is a generated column in Postgres with exact-decimal arithmetic. Money never passes through a JavaScript number.
 
-**Status, stated plainly.** The whole path sits behind a `PAYMENTS_ENABLED` kill switch, both in the client bundle and as an Edge Function secret, until the merchant account is approved. With the switch off the start function falls back to the gateway's sandbox endpoint, which is precisely why the gate exists: an ungated buyer would type a real card into a test form. Until it opens, no deal can complete, because contact details unlock only on a confirmed payment.
+**Status, stated plainly.** The whole path sits behind a `PAYMENTS_ENABLED` kill switch, both in the client bundle and as an Edge Function secret, until the merchant account is approved. With the switch off the start function falls back to the gateway's sandbox endpoint, which is precisely why the gate exists: an ungated buyer would type a real card into a test form. Until it opens, the platform runs as a commission-free beta: accepting an offer is what unlocks contact details. Enabling commission changes that one transition, not the rest of the flow.
 
 ## 3. Delivery is a claim, not a verdict
 
 A supplier marking an order delivered does not finalise anything. It opens a window in which the buyer confirms, disputes with evidence, or does nothing — in which case delivery auto-confirms after seven days. Only a confirmed delivery finalises the request and unlocks the review. A dispute resolved in the buyer's favour opens a refund automatically.
 
+In production, the delivery claim also has to be backed by a legal transport document. The supplier provides the SUMAL code for the load; the server verifies it against the public Inspectorul Pădurii register and accepts it automatically only when the returned code and issuing CUI match the request and the verified supplier. The buyer's seven-day window starts only after that check passes. An invalid code is rejected; a registry outage or an issuer mismatch fails closed into manual review, where an administrator sees the registry snapshot and records a reason. Reusing one document across orders is refused, and verification calls are rate-limited and audited.
+
+Supplier identity is held to the same standard. A CUI is checksum-validated in the browser, the Edge Function and the database; legal name, registry number and VAT status come from the ANAF public registry and are written server-side, so a supplier cannot overwrite them. One approved account can claim each CUI, and bidding requires a verified, approved supplier who has accepted the current version of the professional commitment.
+
 The reason is trust asymmetry: the platform never sees the goods, so neither party's word can be the final state on its own. The three-outcome window with a timeout is the smallest mechanism that lets honest parties finish without an admin while giving a wronged buyer a path that does not depend on the supplier's cooperation.
 
 ## 4. The database is the security boundary, and CI checks the bundle
 
-Row-level security is enabled on every table. Every state transition — posting, bidding, accepting, paying, delivering, disputing — goes through a `SECURITY DEFINER` procedure that checks the caller's role and the row's current state; there are no generic `UPDATE` policies for the client to reach. Contact details are exposed by a procedure that returns them only for the winning pair, only in the paid state.
+Row-level security is enabled on every table. Every state transition — posting, bidding, accepting, paying, delivering, disputing — goes through a `SECURITY DEFINER` procedure that checks the caller's role and the row's current state; there are no generic `UPDATE` policies for the client to reach. Contact details are exposed by a procedure that returns them only for the winning pair, only once the request has reached the unlocking state: acceptance during the commission-free beta, confirmed payment once commission is enabled.
 
 The pipeline extends the same posture outward. A CI step decodes every JWT it can find in the built production bundle and fails the build if any of them carries a service role. It has never fired. The step also confirms the bundle is wired to the expected Supabase project, so a misconfigured environment cannot ship pointing at the wrong database.
 

@@ -1,6 +1,6 @@
 # Timber Logistic
 
-**A two-sided marketplace for timber and wood products in Romania, built as a sealed-bid reverse auction.** A buyer posts one request for a cart of products; every supplier who covers that county gets one business hour to submit a sealed offer; the buyer picks a winner and pays the platform a 3% commission. Live in production with registered suppliers.
+**A two-sided marketplace for timber and wood products in Romania, built as a sealed-bid reverse auction.** A buyer posts one request for a cart of products; every supplier who covers that county gets one business hour to submit a sealed offer; the buyer picks a winner. Live in production as a commission-free beta with registered suppliers; a 3% platform commission is built and gated for launch.
 
 [Live site](https://timber-logistic.ro) · [Engineering notes](docs/engineering.md) · [Verification](docs/verification.md) · [Case study on my site](https://alexandru-lungu.web.app/projects/timber-logistic)
 
@@ -16,13 +16,13 @@ I am the sole developer: product design, the React interface, the Postgres schem
 
 ## Problem and users
 
-Wood is bought by phone in Romania: a buyer calls suppliers one by one, gets a price that depends on who is asking, and has no way to compare. The platform replaces that with a single request that every covering supplier answers blind. Suppliers cannot see each other's bids, the buyer sees all of them sorted cheapest-first once bidding closes, and contact details unlock only for the winning pair — and only once the commission is confirmed paid.
+Wood is bought by phone in Romania: a buyer calls suppliers one by one, gets a price that depends on who is asking, and has no way to compare. The platform replaces that with a single request that every covering supplier answers blind. Suppliers cannot see each other's bids, the buyer sees all of them sorted cheapest-first once bidding closes, and contact details unlock only for the winning pair: on acceptance during the beta, and once commission is live, only after the payment is confirmed.
 
 | Audience | Implemented journey |
 | --- | --- |
-| Buyer | Build a cart across five product categories, post one request, wait for the bidding window, compare sealed offers, accept one, pay the commission, receive contact details, confirm or dispute delivery, review the supplier. |
-| Supplier | Register with company details and delivery counties, be approved by an admin, publish offerings with prices, receive requests that match, submit one sealed whole-cart offer per request within their own working hours, be notified on acceptance and payment. |
-| Administrator | Approve suppliers, moderate offerings, handle EU DSA Article 16 notices with an immutable audit trail, resolve disputes and trigger refunds. |
+| Buyer | Build a cart across five product categories, post one request, wait for the bidding window, compare sealed offers, accept one, receive contact details (after paying the commission, once it is enabled), confirm or dispute delivery, review the supplier. |
+| Supplier | Register with a CUI verified against the ANAF company registry, accept a versioned professional commitment, set delivery counties, be approved by an admin, publish offerings with prices, receive requests that match, submit one sealed whole-cart offer per request within their own working hours, be notified on acceptance, provide a SUMAL transport document for each delivery. |
+| Administrator | Approve suppliers, review deliveries whose SUMAL check failed closed, moderate offerings, handle EU DSA Article 16 notices with an immutable audit trail, resolve disputes and trigger refunds. |
 
 ## A two-minute look
 
@@ -42,7 +42,7 @@ The [engineering notes](docs/engineering.md) cover four tradeoffs in detail: the
 
 As of 2026-09-12 the private repository holds **20 tables, 45 migrations, 5 edge functions, ~20,000 lines of TypeScript across 135 files and 158 commits.** The CI gate runs typecheck, lint, tests, build, a bundle secret scan and a post-deploy check that the live site serves the new build; pushing `main` deploys. See [verification](docs/verification.md) for what is asserted and how.
 
-**Stated plainly:** the marketplace is live with three approved suppliers and ten offerings, and the payment path is integrated end to end — start call, IPN callback, invoice issuance into e-Factura with a test invoice proving the VAT split to the cent. It is held behind a kill switch until the merchant account is approved. Until then no deal can complete, because contact details unlock only on a confirmed payment. The gate is deliberate: an ungated buyer would otherwise type a real card into the gateway's sandbox.
+**Stated plainly, as of 2026-09-25:** the marketplace is live as a commission-free beta with real registered suppliers; contact details unlock when a buyer accepts an offer. Supplier identity (ANAF) and transport-document (SUMAL) verification are deployed in production, and existing suppliers are being re-verified under the new checks before re-approval. The 3% commission path is integrated end to end — start call, IPN callback, invoice issuance into e-Factura with a test invoice proving the VAT split to the cent — and held behind frontend and backend release switches until the production merchant account, the final e-Factura configuration and legal review are complete. The gate is deliberate: an ungated buyer would otherwise type a real card into the gateway's sandbox.
 
 No transaction volume, revenue or conversion figures are claimed.
 
