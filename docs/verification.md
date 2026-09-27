@@ -19,7 +19,7 @@ What is asserted automatically, as of 2026-09-12, and what is not.
 ## Not automated
 
 - **Browser flows.** Registration, posting, bidding, acceptance and payment are verified by hand. The repository keeps a pre-launch checklist that is ticked only when an item is verified, not when it is intended.
-- **The payment gateway against a real merchant account.** The integration is exercised against the gateway's sandbox and the invoicing provider's test series; production is gated until the merchant account clears.
+- **Payments against the live merchant account.** Automated coverage uses the gateway's sandbox and the invoicing provider's test series; live payments are checked by hand.
 - **Load.** No performance figures are claimed.
 
 ## How the counts were taken
