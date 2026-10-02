@@ -10,7 +10,7 @@
 
 ## My contribution
 
-**Alexandru Lungu — Full-Stack Developer, contract, June 2026 – present.**
+**Alexandru Lungu — Full-Stack Engineer, contract, June 2026 – present.**
 
 I am the sole developer: product design, the React interface, the Postgres schema and every migration, the auction logic, the payment and invoicing integrations, the serverless functions, the CI/CD pipeline, the legal and compliance suite, and the visual identity. The client owns the business, the supplier relationships and the brand; I do not claim authorship of their commercial decisions.
 
