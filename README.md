@@ -1,6 +1,6 @@
 # Timber Logistic
 
-**A two-sided marketplace for timber and wood products in Romania, built as a sealed-bid reverse auction.** A buyer posts one request for a cart of products; every supplier who covers that county gets one business hour to submit a sealed offer; the buyer picks a winner and pays the platform a 3% commission by card. Live in production with registered suppliers; card payments live since September 2026.
+**A two-sided marketplace for timber and wood products in Romania, built as a sealed-bid reverse auction.** A buyer posts one request for a cart of products; every supplier who covers that county gets one business hour to submit a sealed offer; the buyer picks a winner. Live in production with registered suppliers; the 3% card-payment commission is built and tested, and switched off while the marketplace runs commission-free.
 
 [Live site](https://timber-logistic.ro) · [Engineering notes](docs/engineering.md) · [Verification](docs/verification.md) · [Case study on my site](https://alexandru-lungu.web.app/projects/timber-logistic)
 
@@ -16,11 +16,11 @@ I am the sole developer: product design, the React interface, the Postgres schem
 
 ## Problem and users
 
-Wood is bought by phone in Romania: a buyer calls suppliers one by one, gets a price that depends on who is asking, and has no way to compare. The platform replaces that with a single request that every covering supplier answers blind. Suppliers cannot see each other's bids, the buyer sees all of them sorted cheapest-first once bidding closes, and contact details unlock only for the winning pair, and only once the commission is confirmed paid.
+Wood is bought by phone in Romania: a buyer calls suppliers one by one, gets a price that depends on who is asking, and has no way to compare. The platform replaces that with a single request that every covering supplier answers blind. Suppliers cannot see each other's bids, the buyer sees all of them sorted cheapest-first once bidding closes, and contact details unlock only for the winning pair: on acceptance while the marketplace is commission-free, and once commission is switched on, only after the payment is confirmed.
 
 | Audience | Implemented journey |
 | --- | --- |
-| Buyer | Build a cart across five product categories, post one request, wait for the bidding window, compare sealed offers, accept one, pay the commission by card, receive contact details, confirm or dispute delivery, review the supplier. |
+| Buyer | Build a cart across five product categories, post one request, wait for the bidding window, compare sealed offers, accept one (once commission is switched on, pay it by card), receive contact details, confirm or dispute delivery, review the supplier. |
 | Supplier | Register with a CUI verified against the ANAF company registry, accept a versioned professional commitment, set delivery counties, be approved by an admin, publish offerings with prices, receive requests that match, submit one sealed whole-cart offer per request within their own working hours, be notified on acceptance, provide a SUMAL transport document for each delivery. |
 | Administrator | Approve suppliers, review deliveries whose SUMAL check failed closed, moderate offerings, handle EU DSA Article 16 notices with an immutable audit trail, resolve disputes and trigger refunds. |
 
@@ -42,7 +42,7 @@ The [engineering notes](docs/engineering.md) cover four tradeoffs in detail: the
 
 As of 2026-09-12 the private repository holds **20 tables, 45 migrations, 5 edge functions, ~20,000 lines of TypeScript across 135 files and 158 commits.** The CI gate runs typecheck, lint, tests, build, a bundle secret scan and a post-deploy check that the live site serves the new build; pushing `main` deploys. See [verification](docs/verification.md) for what is asserted and how.
 
-**Stated plainly, as of 2026-09-28:** the marketplace is live with real registered suppliers, and the 3% commission runs through live Netopia card payments: the start call, the IPN callback as the only path that marks a payment paid, and invoice issuance through Oblio into e-Factura, with a test invoice having proved the VAT split to the cent before launch. Until the merchant contract was signed the platform ran as a commission-free beta with the payment path behind frontend and backend release switches; it went live in September 2026. Supplier identity (ANAF) and transport-document (SUMAL) verification are deployed in production, and existing suppliers are re-verified under the new checks before re-approval.
+**Stated plainly, as of 2026-11-14:** the marketplace is live with real registered suppliers and runs commission-free while it builds visibility. The merchant contract with Netopia is signed and the 3% commission path is built and tested end to end: the start call, the IPN callback as the only path that marks a payment paid, and invoice issuance through Oblio into e-Factura, with a test invoice having proved the VAT split to the cent. It is switched off for customers behind frontend and backend release switches, so no real payments or invoices have been processed yet. Supplier identity (ANAF) and transport-document (SUMAL) verification are deployed in production, and existing suppliers are re-verified under the new checks before re-approval.
 
 No transaction volume, revenue or conversion figures are claimed.
 
